@@ -1,0 +1,6 @@
+DATASET_PATH: "/home/serkan/Desktop/Hacettepe/NLP/Project/AMAZON_FASHION.json"
+MODEL:
+  EMBEDDING_SIZE: 25
+  HIDDEN_SIZE : 64
+TRAIN:
+  EPOCH: 50
