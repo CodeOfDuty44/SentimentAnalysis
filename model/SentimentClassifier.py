@@ -21,25 +21,18 @@ class SentimentClassifier(torch.nn.Module):
         packed = torch.nn.utils.rnn.pack_padded_sequence(x_embed, x_len, batch_first=True, enforce_sorted=False)
         lstm_out, (h_n, c_n) = self.lstm(packed)
         lstm_out_padded, lstm_output_lengths = torch.nn.utils.rnn.pad_packed_sequence(lstm_out, batch_first=True)
-        print(lstm_out)
-        print(lstm_out_padded[0][4])
-        slicer = [i-1 for i in x_len]
-        slicer = torch.tensor([4, 52])
-        print("slicer" , slicer)
-        print("before" , lstm_out_padded.shape)
-        lstm_actual_out = lstm_out_padded[:, slicer,:]
-        lstm_actual_out = torch.index_select(lstm_out_padded, 1, slicer)
-        print(lstm_actual_out.shape)
-        exit()
-        y1 = self.linear(lstm_out[:, -1])
+        # print(lstm_out)
+        # print(lstm_out_padded[0][4])
+        slicer  = torch.tensor(x_len).unsqueeze(1) - 1
+        slicer = slicer.expand(slicer.shape[0],64).unsqueeze(1)#.shape
+        # print("slicer.shape" , slicer.shape)
+        # print("before slicing" , lstm_out_padded.shape)
+        lstm_actual_out = torch.gather(lstm_out_padded, 1, slicer) # b,time, hidden -> b,1,hidden
+        lstm_actual_out = lstm_actual_out.squeeze(1) # b,1,hidden -> b, hidden
+        # print("after slicing" , lstm_actual_out.shape)
+        # exit()
+        y1 = self.linear(lstm_actual_out)
         y2 = self.leaky_relu(y1)
         y3 = self.linear2(y2)
         y4 = self.softmax(y3)
         return y4
-
-        # y1, dummy = self.lstm(x.float())
-        # y1 = y1[:,149,:]
-        # y2 = self.second(y1)
-        # y3 = self.softmax(y2)
-        # return y3
-        # print("ccc")

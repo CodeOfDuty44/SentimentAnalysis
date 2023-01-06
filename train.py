@@ -11,17 +11,13 @@ def my_collate(batch):
     # exit()
     data_lens = [len(x) for x in data]
     data_padded = torch.nn.utils.rnn.pad_sequence(data, batch_first=True, padding_value=0)
-    print(data_padded)
-    print(data_lens)
-    #packed = torch.nn.utils.rnn.pack_padded_sequence(data_padded, data_lens, batch_first=True, enforce_sorted=False)
+    # print(data_padded)
+    # print(data_lens)
+    target = torch.stack(target,0)
+    # print(target)
+    # print(type(target))
+    # exit()
     return data_padded, target, data_lens
-    print(packed)
-    exit()
-    data = [item[0] for item in batch]
-    target = [item[1] for item in batch]
-    #data = torch.LongTensor(data)
-
-    return batch #[data, target]
 
 def main():
     yaml_name = "cfg/train_config.yaml"
@@ -30,23 +26,35 @@ def main():
     cfg = yaml.load(yaml_file.read(), Loader=yaml.FullLoader)
     writer = SummaryWriter()
     dataset = AmazonFashionDataset(cfg)
-    train_loader = torch.utils.data.DataLoader(dataset, shuffle = False, batch_size=2, collate_fn = my_collate)
+    train_loader = torch.utils.data.DataLoader(dataset, shuffle = True, batch_size=cfg["TRAIN"]["BATCH"], collate_fn = my_collate)
 
     model = SentimentClassifier(cfg["MODEL"]["EMBEDDING_SIZE"], cfg["MODEL"]["HIDDEN_SIZE"])
     criterion = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
+    optimizer = torch.optim.SGD(model.parameters(), lr=cfg["TRAIN"]["LR"], momentum=cfg["TRAIN"]["MOMENTUM"])
     temp = 0
     for epoch in range(cfg["TRAIN"]["EPOCH"]):
         for i, (data, label, data_lens) in enumerate(train_loader):
-            optimizer.zero_grad()
-            out = model(data, data_lens)
-            #out = out.unsqueeze(0)
-            print(out)
-            loss = criterion(out, label)
-            loss.backward()
-            optimizer.step()
-            writer.add_scalar("Loss/train", loss, temp )
-            temp += 1
+            while(True):
+                optimizer.zero_grad()
+                try:
+                    out = model(data, data_lens)
+                except:
+                    print("data: ", data)
+                    print("data.shape: ", data.shape)
+                    print("i: ", i)
+                #out = out.unsqueeze(0)
+                loss = criterion(out, label)
+                loss.backward()
+                if i % 100 == 0:
+                    print("out: ", out)
+                    print("label: ",  label)
+                # print(model.lstm.weight_ih_l0.grad)
+                # print("*************")
+                # print(model.linear.weight.grad)
+                # exit()
+                optimizer.step()
+                writer.add_scalar("Loss/train", loss, temp )
+                temp += 1
 
 
 

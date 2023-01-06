@@ -24,7 +24,8 @@ class AmazonFashionDataset(torch.utils.data.Dataset):
     
     def __getitem__(self, index):
         try:
-            text = self.data[index]["reviewText"]
+            #index=0
+            text = self.data[index]["summary"]
             text = self.tokenizer(text)
             text = [self.glove.stoi[i] for i in text] #word2index
             text = torch.tensor(text)
@@ -38,7 +39,9 @@ class AmazonFashionDataset(torch.utils.data.Dataset):
                 label[2] = 1
             return text, label
         except:
+            # print("Warning: Data could not be read, tried index is: ", index)
             i = random.randint(0, self.len - 1)
+            # print("new index is: ", i)
             return self.__getitem__(i)
 
 
@@ -59,8 +62,12 @@ def main():
     reviewScores = [0] * 5
 
     glove = torchtext.vocab.GloVe(name='twitter.27B', dim=25)
-    data, label = dataset.__getitem__(0)
+    data, label = dataset.__getitem__(32169)
     print(data)
+    print("aaa")
+    ccc = dataset.data[21394]["summary"]
+    ccc = dataset.tokenizer(ccc)
+    print(ccc)
     exit()
     tokenizer = torchtext.data.get_tokenizer("basic_english")
     data = glove.get_vecs_by_tokens(data)
