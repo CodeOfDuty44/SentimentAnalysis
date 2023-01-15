@@ -5,7 +5,7 @@ import random
 import torchtext
 
 class AmazonFashionDataset(torch.utils.data.Dataset):
-    def __init__(self, cfg, train=True):
+    def __init__(self, cfg, mode="train"):
         super(AmazonFashionDataset, self).__init__()
         self.dataPath = cfg["DATASET_PATH"]
         with open(self.dataPath) as f:
@@ -14,21 +14,28 @@ class AmazonFashionDataset(torch.utils.data.Dataset):
             temp = temp.replace('}{', '},{')
             temp = "[" + temp + "]"
             self.data =  json.loads(temp)
-
-        self.len = len(self.data)
+        if mode == "train":
+            self.len = cfg["DATA"]["TRAIN_SIZE"]
+            self.index_offset = 0
+        elif mode == "val":
+            self.len = cfg["DATA"]["VAL_SIZE"]
+            self.index_offset = cfg["DATA"]["TRAIN_SIZE"]
+        elif mode == "test":
+            self.len = cfg["DATA"]["TEST_SIZE"]
+            self.index_offset = cfg["DATA"]["TRAIN_SIZE"] + cfg["DATA"]["VAL_SIZE"] 
         self.tokenizer = torchtext.data.get_tokenizer("basic_english")
         self.glove = torchtext.vocab.GloVe(name='twitter.27B', dim=25)
+        self.corrupted = 0
 
     def __len__(self):
         return self.len
     
     def __getitem__(self, index):
         try:
-            #index=0
+            index += self.index_offset
             text = self.data[index]["summary"]
             text = self.tokenizer(text)
-            text = [self.glove.stoi[i] for i in text] #word2index
-            text = torch.tensor(text)
+            text = self.glove.get_vecs_by_tokens(text)
             score = self.data[index]["overall"]
             label = torch.zeros(3)
             if score > 2:
@@ -38,10 +45,12 @@ class AmazonFashionDataset(torch.utils.data.Dataset):
             else:
                 label[2] = 1
             return text, label
-        except:
+        except Exception as e:
+            self.corrupted += 1
+            # print(e)
             # print("Warning: Data could not be read, tried index is: ", index)
             i = random.randint(0, self.len - 1)
-            # print("new index is: ", i)
+            # print("new index that will be used is: ", i)
             return self.__getitem__(i)
 
 
@@ -59,31 +68,33 @@ def main():
     dataloader = torch.utils.data.DataLoader(dataset, shuffle = False)
     datasetLen = dataset.__len__()
     corrupted = []
-    reviewScores = [0] * 5
+    reviewScores = [0] * 3
 
-    glove = torchtext.vocab.GloVe(name='twitter.27B', dim=25)
-    data, label = dataset.__getitem__(32169)
-    print(data)
-    print("aaa")
-    ccc = dataset.data[21394]["summary"]
-    ccc = dataset.tokenizer(ccc)
-    print(ccc)
-    exit()
-    tokenizer = torchtext.data.get_tokenizer("basic_english")
-    data = glove.get_vecs_by_tokens(data)
-    print(data)
-    exit()
+    print("5 stars: ", dataset.__getitem__(1538))
+    # glove = torchtext.vocab.GloVe(name='twitter.27B', dim=25)
+    # data, label = dataset.__getitem__(32169)
+    # print(data)
+    # print("aaa")
+    # ccc = dataset.data[21394]["summary"]
+    # ccc = dataset.tokenizer(ccc)
+    # print(ccc)
+    # exit()
+    # tokenizer = torchtext.data.get_tokenizer("basic_english")
+    # data = glove.get_vecs_by_tokens(data)
+    # print(data)
+    # exit()
 
     for i in range(datasetLen):
         try:
             data, label = dataset.__getitem__(i)
-            print(type(data))
-            reviewScores[int(label-1)] += 1
+            label = torch.argmax(label)
+            reviewScores[label] += 1
         except: 
-            #print("Data with index i is corrupted: ", i)
+            print("Data with index i is corrupted: ", i)
             corrupted.append(i)
     print("corrputed entry size: ", len(corrupted))
     print("reviewScores: ", reviewScores)
+
 
 
 

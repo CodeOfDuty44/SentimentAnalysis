@@ -1,9 +1,16 @@
-DATASET_PATH: "/home/serkan/Desktop/Hacettepe/NLP/Project/AMAZON_FASHION.json"
+DATASET_PATH: "/home/serkan/Desktop/Hacettepe/NLP/Project/SentimentAnalysis/data/AMAZON_FASHION_editted.json"
+DATA:
+  TRAIN_SIZE: 600000
+  VAL_SIZE: 183630
+  TEST_SIZE: 100000
+WEIGHT_PATH: "/home/serkan/Desktop/Hacettepe/NLP/Project/SentimentAnalysis/weights"
 MODEL:
   EMBEDDING_SIZE: 25
   HIDDEN_SIZE : 64
 TRAIN:
   EPOCH: 50
-  BATCH: 16
+  BATCH: 256
   LR: 0.1
   MOMENTUM: 0.9
+VAL:
+  BATCH: 64
