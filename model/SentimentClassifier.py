@@ -18,7 +18,7 @@ class SentimentClassifier(torch.nn.Module):
         lstm_out, (h_n, c_n) = self.lstm(packed)
         lstm_out_padded, lstm_output_lengths = torch.nn.utils.rnn.pad_packed_sequence(lstm_out, batch_first=True)
         slicer  = torch.tensor(x_len).unsqueeze(1) - 1
-        slicer = slicer.expand(slicer.shape[0],64).unsqueeze(1)#.shape
+        slicer = slicer.expand(slicer.shape[0],64).unsqueeze(1).cuda()
         lstm_actual_out = torch.gather(lstm_out_padded, 1, slicer) # b,time, hidden -> b,1,hidden
         lstm_actual_out = lstm_actual_out.squeeze(1) # b,1,hidden -> b, hidden
 

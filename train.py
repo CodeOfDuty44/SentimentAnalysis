@@ -22,9 +22,9 @@ def main():
     save_path = cfg["WEIGHT_PATH"]
     train_loader = torch.utils.data.DataLoader(dataset, shuffle = True, batch_size=cfg["TRAIN"]["BATCH"], collate_fn = my_collate)
 
-    model = SentimentClassifier(cfg["MODEL"]["EMBEDDING_SIZE"], cfg["MODEL"]["HIDDEN_SIZE"])
+    model = SentimentClassifier(cfg["MODEL"]["EMBEDDING_SIZE"], cfg["MODEL"]["HIDDEN_SIZE"]).cuda()
     #model.load_state_dict(torch.load(save_path + "/epoch_49.pth"))
-    criterion = torch.nn.CrossEntropyLoss(torch.tensor([0.05, 0.55, 0.4])) #weights are inversely proportional to the class distributions[0.1, 0.55, 0.35]
+    criterion = torch.nn.CrossEntropyLoss(torch.tensor([0.05, 0.55, 0.4]).cuda()) #weights are inversely proportional to the class distributions[0.1, 0.55, 0.35]
     optimizer = torch.optim.SGD(model.parameters(), lr=cfg["TRAIN"]["LR"], momentum=cfg["TRAIN"]["MOMENTUM"])
     temp = 0
     for epoch in range(cfg["TRAIN"]["EPOCH"]):

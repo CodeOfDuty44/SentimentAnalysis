@@ -44,7 +44,7 @@ class AmazonFashionDataset(torch.utils.data.Dataset):
                 label[1] = 1
             else:
                 label[2] = 1
-            return text, label
+            return text.cuda(), label.cuda()
         except Exception as e:
             self.corrupted += 1
             # print(e)
@@ -56,10 +56,6 @@ class AmazonFashionDataset(torch.utils.data.Dataset):
 
 
 def main():
-    # deneme = torchtext.vocab.GloVe(name='twitter.27B', dim=25)
-    # print(deneme.stoi["back"])
-    # print(deneme.vectors[deneme.stoi["back"]])
-    # exit()
     yaml_name = "cfg/train_config.yaml"
     with open(yaml_name) as f:
         yaml_file = open(yaml_name, 'r')
@@ -71,18 +67,6 @@ def main():
     reviewScores = [0] * 3
 
     print("5 stars: ", dataset.__getitem__(1538))
-    # glove = torchtext.vocab.GloVe(name='twitter.27B', dim=25)
-    # data, label = dataset.__getitem__(32169)
-    # print(data)
-    # print("aaa")
-    # ccc = dataset.data[21394]["summary"]
-    # ccc = dataset.tokenizer(ccc)
-    # print(ccc)
-    # exit()
-    # tokenizer = torchtext.data.get_tokenizer("basic_english")
-    # data = glove.get_vecs_by_tokens(data)
-    # print(data)
-    # exit()
 
     for i in range(datasetLen):
         try:
